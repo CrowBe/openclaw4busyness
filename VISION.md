@@ -1,110 +1,43 @@
-## OpenClaw Vision
+## Fork Vision
 
-OpenClaw is the AI that actually does things.
-It runs on your devices, in your channels, with your rules.
+This is a purpose-built fork of [OpenClaw](https://github.com/openclaw/openclaw), adapted to serve as an AI automation assistant for trade business operations.
 
-This document explains the current state and direction of the project.
-We are still early, so iteration is fast.
-Project overview and developer docs: [`README.md`](README.md)
-Contribution guide: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+### Purpose
 
-OpenClaw started as a personal playground to learn AI and build something genuinely useful:
-an assistant that can run real tasks on a real computer.
-It evolved through several names and shells: Warelay -> Clawdbot -> Moltbot -> OpenClaw.
+Small trade businesses carry a significant administrative burden relative to their team size. This fork takes OpenClaw's self-hosted gateway architecture and tailors it to assist with:
 
-The goal: a personal assistant that is easy to use, supports a wide range of platforms, and respects privacy and security.
+- Client communication triage and draft responses
+- Job note capture via voice and text
+- Field report submission and summarisation
+- Quote preparation and review
 
-The current focus is:
+The system enforces strict human approval for any action involving financial commitment or client-facing output. No autonomous decisions cross these boundaries.
 
-Priority:
+### Architecture Principles
 
-- Security and safe defaults
-- Bug fixes and stability
-- Setup reliability and first-run UX
+- **Self-hosted gateway** on dedicated hardware. Client data stays on-premises except for model inference calls.
+- **Closed skill registry**. No community plugins, no dynamic loading. All skills are committed to version control, reviewed, and deployed through a controlled pipeline.
+- **Human-in-the-Loop (HITL) enforcement** at the gateway middleware layer. Financial and client-facing outputs route to an approval queue. This is not optional and cannot be bypassed by individual skills.
+- **Role-scoped Discord channels**. Discord's native server roles and channel permissions control which staff members can access which skills. The gateway validates sender roles before invoking any skill.
+- **PII minimisation**. Client data is replaced with reference tokens before being sent to the model API.
+- **Audit logging**. All skill executions and approval decisions are written to an append-only log.
 
-Next priorities:
+### What's In Scope
 
-- Supporting all major model providers
-- Improving support for major messaging channels (and adding a few high-demand ones)
-- Performance and test infrastructure
-- Better computer-use and agent harness capabilities
-- Ergonomics across CLI and web frontend
-- Companion apps on macOS, iOS, Android, Windows, and Linux
+- Trade business workflows: job notes, field reports, quotes, client inquiry triage
+- Voice-to-text transcription for field workers
+- Structured approval queues for financial and client-facing outputs
+- Self-hosted deployment on dedicated hardware (mini PC or equivalent)
+- Discord as the primary staff interface
 
-Contribution rules:
+### What's Out of Scope
 
-- One PR = one issue/topic. Do not bundle multiple unrelated fixes/features.
-- PRs over ~5,000 changed lines are reviewed only in exceptional circumstances.
-- Do not open large batches of tiny PRs at once; each PR has review cost.
-- For very small related fixes, grouping into one focused PR is encouraged.
+- General-purpose personal assistant features
+- Community skill marketplace (ClawHub)
+- Public-facing chatbot or customer service automation
+- Direct financial transaction execution (invoicing, payments)
+- Social media or content publishing (without HITL gate)
 
-## Security
+### Relationship to Upstream
 
-Security in OpenClaw is a deliberate tradeoff: strong defaults without killing capability.
-The goal is to stay powerful for real work while making risky paths explicit and operator-controlled.
-
-Canonical security policy and reporting:
-
-- [`SECURITY.md`](SECURITY.md)
-
-We prioritize secure defaults, but also expose clear knobs for trusted high-power workflows.
-
-## Plugins & Memory
-
-OpenClaw has an extensive plugin API.
-Core stays lean; optional capability should usually ship as plugins.
-
-Preferred plugin path is npm package distribution plus local extension loading for development.
-If you build a plugin, host and maintain it in your own repository.
-The bar for adding optional plugins to core is intentionally high.
-Plugin docs: [`docs/tools/plugin.md`](docs/tools/plugin.md)
-Community plugin listing + PR bar: https://docs.openclaw.ai/plugins/community
-
-Memory is a special plugin slot where only one memory plugin can be active at a time.
-Today we ship multiple memory options; over time we plan to converge on one recommended default path.
-
-### Skills
-
-We still ship some bundled skills for baseline UX.
-New skills should be published to ClawHub first (`clawhub.ai`), not added to core by default.
-Core skill additions should be rare and require a strong product or security reason.
-
-### MCP Support
-
-OpenClaw supports MCP through `mcporter`: https://github.com/steipete/mcporter
-
-This keeps MCP integration flexible and decoupled from core runtime:
-
-- add or change MCP servers without restarting the gateway
-- keep core tool/context surface lean
-- reduce MCP churn impact on core stability and security
-
-For now, we prefer this bridge model over building first-class MCP runtime into core.
-If there is an MCP server or feature `mcporter` does not support yet, please open an issue there.
-
-### Setup
-
-OpenClaw is currently terminal-first by design.
-This keeps setup explicit: users see docs, auth, permissions, and security posture up front.
-
-Long term, we want easier onboarding flows as hardening matures.
-We do not want convenience wrappers that hide critical security decisions from users.
-
-### Why TypeScript?
-
-OpenClaw is primarily an orchestration system: prompts, tools, protocols, and integrations.
-TypeScript was chosen to keep OpenClaw hackable by default.
-It is widely known, fast to iterate in, and easy to read, modify, and extend.
-
-## What We Will Not Merge (For Now)
-
-- New core skills when they can live on ClawHub
-- Full-doc translation sets for all docs (deferred; we plan AI-generated translations later)
-- Commercial service integrations that do not clearly fit the model-provider category
-- Wrapper channels around already supported channels without a clear capability or security gap
-- First-class MCP runtime in core when `mcporter` already provides the integration path
-- Agent-hierarchy frameworks (manager-of-managers / nested planner trees) as a default architecture
-- Heavy orchestration layers that duplicate existing agent and tool infrastructure
-
-This list is a roadmap guardrail, not a law of physics.
-Strong user demand and strong technical rationale can change it.
+This fork is based on OpenClaw (MIT licensed). It is intentionally divergent — the ClawHub skill registry has been removed, dynamic skill loading has been disabled, and the permission model has been adapted for business use. Security patches from upstream may be cherry-picked selectively after review, but the fork does not track upstream `main`.
