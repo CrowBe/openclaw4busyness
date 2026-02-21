@@ -1,6 +1,9 @@
 # Repository Guidelines
 
-- Repo: https://github.com/openclaw/openclaw
+> **Fork context:** This is a purpose-built fork of OpenClaw, adapted for trade business automation.
+> Key differences from upstream: closed skill registry (no ClawHub), HITL approval queue for financial/client-facing outputs, role-scoped Discord channels. See `VISION.md` and `docs/internal/BUILD_PLAN.md`.
+
+- Repo: https://github.com/CrowBe/openclaw4busyness
 - GitHub issues/comments/PR comments: use literal multiline strings or `-F - <<'EOF'` (or $'...') for real newlines; never embed "\\n".
 
 ## Project Structure & Module Organization
@@ -10,43 +13,17 @@
 - Docs: `docs/` (images, queue, Pi config). Built output lives in `dist/`.
 - Plugins/extensions: live under `extensions/*` (workspace packages). Keep plugin-only deps in the extension `package.json`; do not add them to the root `package.json` unless core uses them.
 - Plugins: install runs `npm install --omit=dev` in plugin dir; runtime deps must live in `dependencies`. Avoid `workspace:*` in `dependencies` (npm install breaks); put `openclaw` in `devDependencies` or `peerDependencies` instead (runtime resolves `openclaw/plugin-sdk` via jiti alias).
-- Installers served from `https://openclaw.ai/*`: live in the sibling repo `../openclaw.ai` (`public/install.sh`, `public/install-cli.sh`, `public/install.ps1`).
 - Messaging channels: always consider **all** built-in + extension channels when refactoring shared logic (routing, allowlists, pairing, command gating, onboarding, docs).
   - Core channel docs: `docs/channels/`
   - Core channel code: `src/telegram`, `src/discord`, `src/slack`, `src/signal`, `src/imessage`, `src/web` (WhatsApp web), `src/channels`, `src/routing`
   - Extensions (channel plugins): `extensions/*` (e.g. `extensions/msteams`, `extensions/matrix`, `extensions/zalo`, `extensions/zalouser`, `extensions/voice-call`)
 - When adding channels/extensions/apps/docs, update `.github/labeler.yml` and create matching GitHub labels (use existing channel/extension label colors).
 
-## Docs Linking (Mintlify)
+## Docs
 
-- Docs are hosted on Mintlify (docs.openclaw.ai).
-- Internal doc links in `docs/**/*.md`: root-relative, no `.md`/`.mdx` (example: `[Config](/configuration)`).
-- When working with documentation, read the mintlify skill.
-- Section cross-references: use anchors on root-relative paths (example: `[Hooks](/configuration#hooks)`).
-- Doc headings and anchors: avoid em dashes and apostrophes in headings because they break Mintlify anchor links.
-- When Peter asks for links, reply with full `https://docs.openclaw.ai/...` URLs (not root-relative).
-- When you touch docs, end the reply with the `https://docs.openclaw.ai/...` URLs you referenced.
-- README (GitHub): keep absolute docs URLs (`https://docs.openclaw.ai/...`) so links work on GitHub.
+- Internal project docs live in `docs/internal/` (BUILD_PLAN.md, INFRASTRUCTURE.md).
+- The upstream Mintlify docs site (`docs/`) is not maintained in this fork. It remains in the repo for reference only.
 - Docs content must be generic: no personal device names/hostnames/paths; use placeholders like `user@gateway-host` and “gateway host”.
-
-## Docs i18n (zh-CN)
-
-- `docs/zh-CN/**` is generated; do not edit unless the user explicitly asks.
-- Pipeline: update English docs → adjust glossary (`docs/.i18n/glossary.zh-CN.json`) → run `scripts/docs-i18n` → apply targeted fixes only if instructed.
-- Translation memory: `docs/.i18n/zh-CN.tm.jsonl` (generated).
-- See `docs/.i18n/README.md`.
-- The pipeline can be slow/inefficient; if it’s dragging, ping @jospalmbier on Discord instead of hacking around it.
-
-## exe.dev VM ops (general)
-
-- Access: stable path is `ssh exe.dev` then `ssh vm-name` (assume SSH key already set).
-- SSH flaky: use exe.dev web terminal or Shelley (web agent); keep a tmux session for long ops.
-- Update: `sudo npm i -g openclaw@latest` (global install needs root on `/usr/lib/node_modules`).
-- Config: use `openclaw config set ...`; ensure `gateway.mode=local` is set.
-- Discord: store raw token only (no `DISCORD_BOT_TOKEN=` prefix).
-- Restart: stop old gateway and run:
-  `pkill -9 -f openclaw-gateway || true; nohup openclaw gateway run --bind loopback --port 18789 --force > /tmp/openclaw-gateway.log 2>&1 &`
-- Verify: `openclaw channels status --probe`, `ss -ltnp | rg 18789`, `tail -n 120 /tmp/openclaw-gateway.log`.
 
 ## Build, Test, and Development Commands
 
@@ -124,19 +101,6 @@
 - Never commit or publish real phone numbers, videos, or live configuration values. Use obviously fake placeholders in docs, tests, and examples.
 - Release flow: always read `docs/reference/RELEASING.md` and `docs/platforms/mac/release.md` before any release work; do not ask routine questions once those docs answer them.
 
-## GHSA (Repo Advisory) Patch/Publish
-
-- Before reviewing security advisories, read `SECURITY.md`.
-- Fetch: `gh api /repos/openclaw/openclaw/security-advisories/<GHSA>`
-- Latest npm: `npm view openclaw version --userconfig "$(mktemp)"`
-- Private fork PRs must be closed:
-  `fork=$(gh api /repos/openclaw/openclaw/security-advisories/<GHSA> | jq -r .private_fork.full_name)`
-  `gh pr list -R "$fork" --state open` (must be empty)
-- Description newline footgun: write Markdown via heredoc to `/tmp/ghsa.desc.md` (no `"\\n"` strings)
-- Build patch JSON via jq: `jq -n --rawfile desc /tmp/ghsa.desc.md '{summary,severity,description:$desc,vulnerabilities:[...]}' > /tmp/ghsa.patch.json`
-- Patch + publish: `gh api -X PATCH /repos/openclaw/openclaw/security-advisories/<GHSA> --input /tmp/ghsa.patch.json` (publish = include `"state":"published"`; no `/publish` endpoint)
-- If publish fails (HTTP 422): missing `severity`/`description`/`vulnerabilities[]`, or private fork has open PRs
-- Verify: re-fetch; ensure `state=published`, `published_at` set; `jq -r .description | rg '\\\\n'` returns nothing
 
 ## Troubleshooting
 
@@ -147,7 +111,6 @@
 - Vocabulary: "makeup" = "mac app".
 - Never edit `node_modules` (global/Homebrew/npm/git installs too). Updates overwrite. Skill notes go in `tools.md` or `AGENTS.md`.
 - When adding a new `AGENTS.md` anywhere in the repo, also add a `CLAUDE.md` symlink pointing to it (example: `ln -s AGENTS.md CLAUDE.md`).
-- Signal: "update fly" => `fly ssh console -a flawd-bot -C "bash -lc 'cd /data/clawd/openclaw && git pull --rebase origin main'"` then `fly machines restart e825232f34d058 -a flawd-bot`.
 - When working on a GitHub Issue or PR, print the full URL at the end of the task.
 - When answering questions, respond with high-confidence answers only: verify in code; do not guess.
 - Never update the Carbon dependency.
@@ -193,47 +156,9 @@
 - For manual `openclaw message send` messages that include `!`, use the heredoc pattern noted below to avoid the Bash tool’s escaping.
 - Release guardrails: do not change version numbers without operator’s explicit consent; always ask permission before running any npm publish/release step.
 
-## NPM + 1Password (publish/verify)
+## Fork-Specific Notes
 
-- Use the 1password skill; all `op` commands must run inside a fresh tmux session.
-- Sign in: `eval "$(op signin --account my.1password.com)"` (app unlocked + integration on).
-- OTP: `op read 'op://Private/Npmjs/one-time password?attribute=otp'`.
-- Publish: `npm publish --access public --otp="<otp>"` (run from the package dir).
-- Verify without local npmrc side effects: `npm view <pkg> version --userconfig "$(mktemp)"`.
-- Kill the tmux session after publish.
-
-## Plugin Release Fast Path (no core `openclaw` publish)
-
-- Release only already-on-npm plugins. Source list is in `docs/reference/RELEASING.md` under "Current npm plugin list".
-- Run all CLI `op` calls and `npm publish` inside tmux to avoid hangs/interruption:
-  - `tmux new -d -s release-plugins-$(date +%Y%m%d-%H%M%S)`
-  - `eval "$(op signin --account my.1password.com)"`
-- 1Password helpers:
-  - password used by `npm login`:
-    `op item get Npmjs --format=json | jq -r '.fields[] | select(.id=="password").value'`
-  - OTP:
-    `op read 'op://Private/Npmjs/one-time password?attribute=otp'`
-- Fast publish loop (local helper script in `/tmp` is fine; keep repo clean):
-  - compare local plugin `version` to `npm view <name> version`
-  - only run `npm publish --access public --otp="<otp>"` when versions differ
-  - skip if package is missing on npm or version already matches.
-- Keep `openclaw` untouched: never run publish from repo root unless explicitly requested.
-- Post-check for each release:
-  - per-plugin: `npm view @openclaw/<name> version --userconfig "$(mktemp)"` should be `2026.2.17`
-  - core guard: `npm view openclaw version --userconfig "$(mktemp)"` should stay at previous version unless explicitly requested.
-
-## Changelog Release Notes
-
-- When cutting a mac release with beta GitHub prerelease:
-  - Tag `vYYYY.M.D-beta.N` from the release commit (example: `v2026.2.15-beta.1`).
-  - Create prerelease with title `openclaw YYYY.M.D-beta.N`.
-  - Use release notes from `CHANGELOG.md` version section (`Changes` + `Fixes`, no title duplicate).
-  - Attach at least `OpenClaw-YYYY.M.D.zip` and `OpenClaw-YYYY.M.D.dSYM.zip`; include `.dmg` if available.
-
-- Keep top version entries in `CHANGELOG.md` sorted by impact:
-  - `### Changes` first.
-  - `### Fixes` deduped and ranked with user-facing fixes first.
-- Before tagging/publishing, run:
-  - `node --import tsx scripts/release-check.ts`
-  - `pnpm release:check`
-  - `pnpm test:install:smoke` or `OPENCLAW_INSTALL_SMOKE_SKIP_NONROOT=1 pnpm test:install:smoke` for non-root smoke path.
+- This fork does not publish to npm. The `openclaw` package name and `@openclaw/*` plugin names are upstream concerns.
+- This fork does not maintain the Mintlify docs site. Internal docs live in `docs/internal/`.
+- Skills must follow the closed-skill policy: no dynamic loading, no ClawHub. All skills are committed to `/skills` and reviewed before merge. See `CONTRIBUTING.md`.
+- Skills producing financial or client-facing output must declare `financial: true` or `client_facing: true` in their metadata. The gateway middleware enforces HITL routing for these flags.

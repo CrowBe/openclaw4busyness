@@ -1,96 +1,39 @@
-# 🦞 OpenClaw — Personal AI Assistant
+# OpenClaw — Trade Business Automation Assistant
 
 <p align="center">
-    <picture>
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/openclaw-logo-text-dark.png">
-        <img src="https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/openclaw-logo-text.png" alt="OpenClaw" width="500">
-    </picture>
-</p>
-
-<p align="center">
-  <strong>EXFOLIATE! EXFOLIATE!</strong>
-</p>
-
-<p align="center">
-  <a href="https://github.com/openclaw/openclaw/actions/workflows/ci.yml?branch=main"><img src="https://img.shields.io/github/actions/workflow/status/openclaw/openclaw/ci.yml?branch=main&style=for-the-badge" alt="CI status"></a>
-  <a href="https://github.com/openclaw/openclaw/releases"><img src="https://img.shields.io/github/v/release/openclaw/openclaw?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
-  <a href="https://discord.gg/clawd"><img src="https://img.shields.io/discord/1456350064065904867?label=Discord&logo=discord&logoColor=white&color=5865F2&style=for-the-badge" alt="Discord"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License"></a>
 </p>
 
-**OpenClaw** is a _personal AI assistant_ you run on your own devices.
-It answers you on the channels you already use (WhatsApp, Telegram, Slack, Discord, Google Chat, Signal, iMessage, Microsoft Teams, WebChat), plus extension channels like BlueBubbles, Matrix, Zalo, and Zalo Personal. It can speak and listen on macOS/iOS/Android, and can render a live Canvas you control. The Gateway is just the control plane — the product is the assistant.
+**A purpose-built fork of [OpenClaw](https://github.com/openclaw/openclaw)**, adapted to serve as an AI automation assistant for trade business operations.
 
-If you want a personal, single-user assistant that feels local, fast, and always-on, this is it.
+This fork takes OpenClaw's self-hosted gateway architecture and tailors it for trade business workflows: job note capture, field reporting, quote preparation, and client inquiry triage. It enforces strict human-in-the-loop (HITL) approval for any action involving financial commitment or client-facing output.
 
-[Website](https://openclaw.ai) · [Docs](https://docs.openclaw.ai) · [Vision](VISION.md) · [DeepWiki](https://deepwiki.com/openclaw/openclaw) · [Getting Started](https://docs.openclaw.ai/start/getting-started) · [Updating](https://docs.openclaw.ai/install/updating) · [Showcase](https://docs.openclaw.ai/start/showcase) · [FAQ](https://docs.openclaw.ai/start/faq) · [Wizard](https://docs.openclaw.ai/start/wizard) · [Nix](https://github.com/openclaw/nix-openclaw) · [Docker](https://docs.openclaw.ai/install/docker) · [Discord](https://discord.gg/clawd)
+[Vision](VISION.md) · [Build Plan](docs/internal/BUILD_PLAN.md) · [Infrastructure](docs/internal/INFRASTRUCTURE.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-Preferred setup: run the onboarding wizard (`openclaw onboard`) in your terminal.
-The wizard guides you step by step through setting up the gateway, workspace, channels, and skills. The CLI wizard is the recommended path and works on **macOS, Linux, and Windows (via WSL2; strongly recommended)**.
-Works with npm, pnpm, or bun.
-New install? Start here: [Getting started](https://docs.openclaw.ai/start/getting-started)
+## Key Differences from Upstream OpenClaw
 
-**Subscriptions (OAuth):**
+- **Closed skill registry** — ClawHub and dynamic skill loading removed. All skills are committed to version control and reviewed before deployment.
+- **HITL approval queue** — Financial outputs and client-facing communications route through a mandatory approval queue at the gateway middleware layer.
+- **Role-scoped Discord channels** — Discord server roles and channel permissions control which staff can access which skills (leveraging OpenClaw's existing per-channel skill filtering).
+- **PII minimisation** — Client data replaced with reference tokens before sending to model API.
+- **Audit logging** — All skill executions and approval decisions written to an append-only log.
 
-- **[Anthropic](https://www.anthropic.com/)** (Claude Pro/Max)
-- **[OpenAI](https://openai.com/)** (ChatGPT/Codex)
+## MVP Workflows
 
-Model note: while any model is supported, I strongly recommend **Anthropic Pro/Max (100/200) + Opus 4.6** for long‑context strength and better prompt‑injection resistance. See [Onboarding](https://docs.openclaw.ai/start/onboarding).
-
-## Models (selection + auth)
-
-- Models config + CLI: [Models](https://docs.openclaw.ai/concepts/models)
-- Auth profile rotation (OAuth vs API keys) + fallbacks: [Model failover](https://docs.openclaw.ai/concepts/model-failover)
-
-## Install (recommended)
-
-Runtime: **Node ≥22**.
-
-```bash
-npm install -g openclaw@latest
-# or: pnpm add -g openclaw@latest
-
-openclaw onboard --install-daemon
-```
-
-The wizard installs the Gateway daemon (launchd/systemd user service) so it stays running.
-
-## Quick start (TL;DR)
-
-Runtime: **Node ≥22**.
-
-Full beginner guide (auth, pairing, channels): [Getting started](https://docs.openclaw.ai/start/getting-started)
-
-```bash
-openclaw onboard --install-daemon
-
-openclaw gateway --port 18789 --verbose
-
-# Send a message
-openclaw message send --to +1234567890 --message "Hello from OpenClaw"
-
-# Talk to the assistant (optionally deliver back to any connected channel: WhatsApp/Telegram/Slack/Discord/Google Chat/Signal/iMessage/BlueBubbles/Microsoft Teams/Matrix/Zalo/Zalo Personal/WebChat)
-openclaw agent --message "Ship checklist" --thinking high
-```
-
-Upgrading? [Updating guide](https://docs.openclaw.ai/install/updating) (and run `openclaw doctor`).
-
-## Development channels
-
-- **stable**: tagged releases (`vYYYY.M.D` or `vYYYY.M.D-<patch>`), npm dist-tag `latest`.
-- **beta**: prerelease tags (`vYYYY.M.D-beta.N`), npm dist-tag `beta` (macOS app may be missing).
-- **dev**: moving head of `main`, npm dist-tag `dev` (when published).
-
-Switch channels (git + npm): `openclaw update --channel stable|beta|dev`.
-Details: [Development channels](https://docs.openclaw.ai/install/development-channels).
+| Workflow | Role | HITL |
+|----------|------|------|
+| Voice-to-Job-Note | Field Worker | Yes (sender confirms transcription) |
+| Field Report Submission | Field Worker | No (internal record) |
+| Quote Draft Preparation | Office Operator | Yes (operator approves) |
+| Client Inquiry Triage | Office Operator | Yes (operator approves response) |
 
 ## From source (development)
 
 Prefer `pnpm` for builds from source. Bun is optional for running TypeScript directly.
 
 ```bash
-git clone https://github.com/openclaw/openclaw.git
-cd openclaw
+git clone https://github.com/CrowBe/openclaw4busyness.git
+cd openclaw4busyness
 
 pnpm install
 pnpm ui:build # auto-installs UI deps on first run
@@ -256,11 +199,9 @@ Details: [Nodes](https://docs.openclaw.ai/nodes) · [macOS app](https://docs.ope
 
 Details: [Session tools](https://docs.openclaw.ai/concepts/session-tool)
 
-## Skills registry (ClawHub)
+## Skills
 
-ClawHub is a minimal skill registry. With ClawHub enabled, the agent can search for skills automatically and pull in new ones as needed.
-
-[ClawHub](https://clawhub.com)
+This fork uses a **closed skill registry**. Skills are plain TypeScript modules committed to `/skills` and loaded at startup. Dynamic skill loading and ClawHub have been removed. See [CONTRIBUTING.md](CONTRIBUTING.md) for the skill submission process.
 
 ## Chat commands
 
@@ -475,20 +416,9 @@ Use these when you’re past the onboarding flow and want the deeper reference.
 
 - [docs.openclaw.ai/gmail-pubsub](https://docs.openclaw.ai/automation/gmail-pubsub)
 
-## Molty
+## Upstream
 
-OpenClaw was built for **Molty**, a space lobster AI assistant. 🦞
-by Peter Steinberger and the community.
-
-- [openclaw.ai](https://openclaw.ai)
-- [soul.md](https://soul.md)
-- [steipete.me](https://steipete.me)
-- [@openclaw](https://x.com/openclaw)
-
-## Community
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, maintainers, and how to submit PRs.
-AI/vibe-coded PRs welcome! 🤖
+This fork is based on [OpenClaw](https://github.com/openclaw/openclaw) (MIT licensed). See [VISION.md](VISION.md) for the relationship to upstream and [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 Special thanks to [Mario Zechner](https://mariozechner.at/) for his support and for
 [pi-mono](https://github.com/badlogic/pi-mono).

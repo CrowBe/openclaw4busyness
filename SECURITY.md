@@ -1,21 +1,10 @@
 # Security Policy
 
-If you believe you've found a security issue in OpenClaw, please report it privately.
+This is a purpose-built fork of [OpenClaw](https://github.com/openclaw/openclaw), adapted for trade business automation. The security model has been tightened for business use.
 
 ## Reporting
 
-Report vulnerabilities directly to the repository where the issue lives:
-
-- **Core CLI and gateway** — [openclaw/openclaw](https://github.com/openclaw/openclaw)
-- **macOS desktop app** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/macos)
-- **iOS app** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/ios)
-- **Android app** — [openclaw/openclaw](https://github.com/openclaw/openclaw) (apps/android)
-- **ClawHub** — [openclaw/clawhub](https://github.com/openclaw/clawhub)
-- **Trust and threat model** — [openclaw/trust](https://github.com/openclaw/trust)
-
-For issues that don't fit a specific repo, or if you're unsure, email **security@openclaw.ai** and we'll route it.
-
-For full reporting instructions see our [Trust page](https://trust.openclaw.ai).
+If you believe you've found a security issue, please report it via [GitHub private vulnerability reporting](https://github.com/CrowBe/openclaw4busyness/security/advisories/new) on this repository.
 
 ### Required in Reports
 
@@ -28,26 +17,37 @@ For full reporting instructions see our [Trust page](https://trust.openclaw.ai).
 7. **Environment**
 8. **Remediation Advice**
 
-Reports without reproduction steps, demonstrated impact, and remediation advice will be deprioritized. Given the volume of AI-generated scanner findings, we must ensure we're receiving vetted reports from researchers who understand the issues.
+## Closed Skill Registry
 
-## Security & Trust
+This fork enforces a closed skill registry. All skills are plain TypeScript modules committed to version control. The following are prohibited:
 
-**Jamieson O'Reilly** ([@theonejvo](https://twitter.com/theonejvo)) is Security & Trust at OpenClaw. Jamieson is the founder of [Dvuln](https://dvuln.com) and brings extensive experience in offensive security, penetration testing, and security program development.
+- **No dynamic skill installation at runtime.** Skills cannot be loaded from the network or installed via CLI commands.
+- **No community skill registry (ClawHub).** The ClawHub module and all dynamic skill-loading endpoints have been removed.
+- **No skill may be added without a pull request, code review, and explicit merge approval.**
 
-## Bug Bounties
+Each skill declares metadata flags (`financial`, `client_facing`, `read_only`) that determine how the gateway handles its output. These flags cannot be overridden at runtime.
 
-OpenClaw is a labor of love. There is no bug bounty program and no budget for paid reports. Please still disclose responsibly so we can fix issues quickly.
-The best way to help the project right now is by sending PRs.
+## Human-in-the-Loop (HITL) Enforcement
 
-## Maintainers: GHSA Updates via CLI
+The gateway enforces a mandatory approval queue for certain output types:
 
-When patching a GHSA via `gh api`, include `X-GitHub-Api-Version: 2022-11-28` (or newer). Without it, some fields (notably CVSS) may not persist even if the request returns 200.
+- **Financial outputs** (quotes, purchase orders, invoices): must be approved by an operator before execution
+- **Client-facing communications** (messages, documents intended for clients): must be approved before dispatch
+- **System modifications** (external API writes, file writes outside gateway storage): must be approved
 
-## Out of Scope
+This enforcement happens at the **gateway middleware layer**, not within individual skills. A skill cannot bypass the HITL queue regardless of its implementation.
 
-- Public Internet Exposure
-- Using OpenClaw in ways that the docs recommend not to
-- Prompt injection attacks
+## Role-Scoped Access
+
+Discord server roles and channel permissions control which staff members can invoke which skills. The gateway validates the sender's Discord role membership before routing any message to a skill. Field workers have no visibility of operator or admin channels.
+
+## PII Minimisation
+
+Before data is sent to the model API, a context scrubber replaces personally identifiable information with reference tokens. The model works with tokens; the local gateway resolves them before acting on output.
+
+## Audit Log
+
+All skill executions — including rejected actions — are written to an append-only audit log. Log entries include: timestamp, requesting user, skill name, proposed action summary, and outcome. This log is not modifiable via any skill and is accessible only to the admin operator.
 
 ## Plugin Trust Boundary
 
@@ -55,74 +55,39 @@ Plugins/extensions are loaded **in-process** with the Gateway and are treated as
 
 - Plugins can execute with the same OS privileges as the OpenClaw process.
 - Runtime helpers (for example `runtime.system.runCommandWithTimeout`) are convenience APIs, not a sandbox boundary.
-- Only install plugins you trust, and prefer `plugins.allow` to pin explicit trusted plugin ids.
+- Only install plugins you trust, and prefer `plugins.allow` to pin explicit trusted plugin IDs.
 
 ## Operational Guidance
 
-For threat model + hardening guidance (including `openclaw security audit --deep` and `--fix`), see:
-
-- `https://docs.openclaw.ai/gateway/security`
-
-### Tool filesystem hardening
+### Tool Filesystem Hardening
 
 - `tools.exec.applyPatch.workspaceOnly: true` (recommended): keeps `apply_patch` writes/deletes within the configured workspace directory.
 - `tools.fs.workspaceOnly: true` (optional): restricts `read`/`write`/`edit`/`apply_patch` paths to the workspace directory.
-- Avoid setting `tools.exec.applyPatch.workspaceOnly: false` unless you fully trust who can trigger tool execution.
 
 ### Web Interface Safety
 
-OpenClaw's web interface (Gateway Control UI + HTTP endpoints) is intended for **local use only**.
+The web interface (Gateway Control UI + HTTP endpoints) is intended for **local use only**.
 
 - Recommended: keep the Gateway **loopback-only** (`127.0.0.1` / `::1`).
   - Config: `gateway.bind="loopback"` (default).
   - CLI: `openclaw gateway run --bind loopback`.
-- Canvas host note: network-visible canvas is **intentional** for trusted node scenarios (LAN/tailnet).
-  - Expected setup: non-loopback bind + Gateway auth (token/password/trusted-proxy) + firewall/tailnet controls.
-  - Expected routes: `/__openclaw__/canvas/`, `/__openclaw__/a2ui/`.
-  - This deployment model alone is not a security vulnerability.
-- Do **not** expose it to the public internet (no direct bind to `0.0.0.0`, no public reverse proxy). It is not hardened for public exposure.
-- If you need remote access, prefer an SSH tunnel or Tailscale serve/funnel (so the Gateway still binds to loopback), plus strong Gateway auth.
-- The Gateway HTTP surface includes the canvas host (`/__openclaw__/canvas/`, `/__openclaw__/a2ui/`). Treat canvas content as sensitive/untrusted and avoid exposing it beyond loopback unless you understand the risk.
+- Do **not** expose it to the public internet. It is not hardened for public exposure.
+- If you need remote access, prefer an SSH tunnel or Tailscale serve/funnel, plus strong Gateway auth.
 
-## Runtime Requirements
+### Runtime Requirements
 
-### Node.js Version
-
-OpenClaw requires **Node.js 22.12.0 or later** (LTS). This version includes important security patches:
-
-- CVE-2025-59466: async_hooks DoS vulnerability
-- CVE-2026-21636: Permission model bypass vulnerability
-
-Verify your Node.js version:
-
-```bash
-node --version  # Should be v22.12.0 or later
-```
+OpenClaw requires **Node.js 22.12.0 or later** (LTS).
 
 ### Docker Security
 
-When running OpenClaw in Docker:
+When running in Docker:
 
 1. The official image runs as a non-root user (`node`) for reduced attack surface
 2. Use `--read-only` flag when possible for additional filesystem protection
 3. Limit container capabilities with `--cap-drop=ALL`
 
-Example secure Docker run:
+## Out of Scope
 
-```bash
-docker run --read-only --cap-drop=ALL \
-  -v openclaw-data:/app/data \
-  openclaw/openclaw:latest
-```
-
-## Security Scanning
-
-This project uses `detect-secrets` for automated secret detection in CI/CD.
-See `.detect-secrets.cfg` for configuration and `.secrets.baseline` for the baseline.
-
-Run locally:
-
-```bash
-pip install detect-secrets==1.5.0
-detect-secrets scan --baseline .secrets.baseline
-```
+- Public internet exposure
+- Using OpenClaw in ways that the docs recommend not to
+- Prompt injection attacks
