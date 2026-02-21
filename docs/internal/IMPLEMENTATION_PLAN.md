@@ -242,16 +242,23 @@ matrix from the build plan using OpenClaw's native per-channel configuration.
 `DiscordGuildEntryResolved` type).
 
 Create a config template matching the channel structure from
-INFRASTRUCTURE.md Section 5.3:
+INFRASTRUCTURE.md Sections 5.3 and 5.5:
 
-| Channel        | Roles                                  | Skills                               |
-|----------------|----------------------------------------|--------------------------------------|
-| `#job-reports` | Field Worker, Office Operator, Admin   | `job-report`, `voice-note`           |
-| `#timesheets`  | Field Worker, Office Operator, Admin   | `timesheet`                          |
-| `#operations`  | Office Operator, Admin                 | `quote`, `inquiry`, `summary`        |
-| `#approvals`   | Office Operator, Admin                 | `hitl-approve`, `hitl-reject`        |
-| `#admin-only`  | Admin                                  | `status`, `audit-log`                |
-| `#bot-log`     | Admin                                  | (logging output only, no skills)     |
+| Channel        | Roles                                  | Skills (MVP)                           | Post-MVP only              |
+|----------------|----------------------------------------|----------------------------------------|----------------------------|
+| `#job-reports` | Field Worker, Office Operator, Admin   | `voice-note`, `field-report`           |                            |
+| `#timesheets`  | Field Worker, Office Operator, Admin   | *(no bot interaction at MVP)*          | `timesheet`                |
+| `#operations`  | Office Operator, Admin                 | `quote-draft`, `inquiry-triage`        | `summary`, `schedule`      |
+| `#approvals`   | Office Operator, Admin                 | `hitl-approve`                         |                            |
+| `#content`     | Office Operator, Admin                 | *(no bot interaction at MVP)*          | content pipeline skills    |
+| `#admin-only`  | Admin                                  | `audit-log`                            | `status`, `deploy`         |
+| `#bot-log`     | Admin                                  | (logging output only, no skills)       |                            |
+
+Skill names in the config must exactly match the `metadata.name` field
+exported by each skill module (e.g. `voice-note` maps to the `name`
+field in `skills/voice-note.ts`). Post-MVP channels and skills should
+be included in the config template as commented-out placeholders so the
+Discord server structure is forward-compatible.
 
 Each channel gets a `systemPrompt` tailored to its purpose.
 
@@ -281,6 +288,75 @@ channel creation with permission overrides, and the gateway config mapping.
 
 **Acceptance:** A non-technical operator can follow the checklist to set up
 the Discord server from scratch.
+
+---
+
+### Task 1.9: Production Device Provisioning
+
+**What:** Provision the business device with the gateway service, automated
+deploy pipeline, nightly backup, and SSH hardening as specified in
+INFRASTRUCTURE.md Sections 4, 6, 7, 8, and 9. This task does not modify
+repository code -- it configures the production environment so the gateway
+can run reliably as a managed service.
+
+**Where:**
+
+- `/opt/gateway/deploy.sh` -- deploy script (INFRASTRUCTURE.md Section 4.2).
+  Verbatim copy from that section; make executable (`chmod +x`).
+- `/etc/systemd/system/gateway.service` -- permanent gateway process unit
+  (Section 9).
+- `/etc/systemd/system/gateway-deploy.service` -- one-shot deploy service
+  unit (Section 4.3).
+- `/etc/systemd/system/gateway-deploy.timer` -- nightly deploy trigger
+  (Section 4.3). Runs at 02:30 UTC with 10-minute jitter.
+- `/opt/gateway/backup.sh` -- GPG-encrypted nightly backup script
+  (Section 8.2). Uploads to Backblaze B2.
+- `/etc/systemd/system/gateway-backup.timer` -- nightly backup trigger
+  (Section 8.2). Runs at 03:00 UTC with 5-minute jitter.
+- `/etc/ssh/sshd_config` -- SSH hardening: key-only auth, no root login,
+  restricted `AllowUsers` (Section 6.2).
+- `/opt/gateway/.env` -- secrets file containing `ANTHROPIC_API_KEY` and
+  `DISCORD_BOT_TOKEN`. Permissions must be `600`, owned by the `gateway`
+  user (Section 7.2).
+- `docs/internal/CONFIGURATION_REFERENCE.md` -- new file. A filled-in copy
+  of INFRASTRUCTURE.md Section 10 with the actual device hostname, IP,
+  fingerprints, channel IDs, role IDs, and Backblaze bucket name captured
+  after provisioning.
+
+**How:** Follow INFRASTRUCTURE.md step-by-step:
+
+1. Create the `gateway` OS user (`useradd --system --create-home gateway`).
+2. Clone the `production` branch to `/opt/gateway` using the read-only SSH
+   deploy key (Section 3.3).
+3. Copy the `deploy.sh` script from INFRASTRUCTURE.md Section 4.2, install
+   the systemd units from Sections 4.3 and 9, enable and start them.
+4. Copy `backup.sh` from Section 8.2, configure the Backblaze B2 bucket,
+   write the GPG passphrase to `/opt/gateway/.backup-passphrase` (mode
+   `400`), install and enable the backup timer.
+5. Apply SSH hardening from Section 6.2 and confirm key-only login works
+   before closing the session.
+6. Create `/opt/gateway/.env` with the business API keys; set permissions
+   to `600`.
+7. Perform an initial manual deploy run (`bash /opt/gateway/deploy.sh`) and
+   verify the gateway service starts cleanly.
+
+**Tests:** Manual verification checklist:
+
+- `sudo systemctl is-active gateway.service` returns `active`.
+- `sudo systemctl is-active gateway-deploy.timer` returns `active`.
+- `sudo systemctl is-active gateway-backup.timer` returns `active`.
+- Run `deploy.sh` manually and confirm it exits 0 and the gateway restarts.
+- Run `backup.sh` manually and confirm a `.tar.gz.gpg` object appears in
+  the B2 bucket.
+- Confirm password SSH login is rejected; key-based login succeeds.
+- Verify `/opt/gateway/.env` is mode `600` owned by `gateway`.
+
+**Acceptance:** Gateway service starts automatically on boot, restarts on
+failure. Deploy pipeline picks up `production` branch changes overnight.
+Nightly encrypted backups land in Backblaze B2. SSH access is key-only and
+restricted to the developer's machine. All items in INFRASTRUCTURE.md
+Section 10 are filled in and committed to
+`docs/internal/CONFIGURATION_REFERENCE.md`.
 
 ---
 
@@ -848,24 +924,31 @@ workflow as recommended in the build plan.
 
 ### Task 4.2: Deploy Pipeline Verification
 
-**What:** Verify the deployment pipeline described in INFRASTRUCTURE.md works
-end-to-end.
+**What:** Confirm the deployment pipeline provisioned in Task 1.9 works
+correctly against the live `production` branch.
 
 **Where:**
 
-- `deploy.sh` -- already defined in INFRASTRUCTURE.md Section 4.2. Verify it
-  exists and works.
-- Systemd units as documented.
+- `/opt/gateway/deploy.sh` -- created in Task 1.9.
+- `/etc/systemd/system/gateway.service` -- created in Task 1.9.
+- `/etc/systemd/system/gateway-deploy.timer` -- created in Task 1.9.
 
-**How:** Follow INFRASTRUCTURE.md Section 4 to:
+**How:**
 
-1. Verify `deploy.sh` script is present and executable.
-2. Test the deploy script on the development machine (dry run).
-3. Verify the gateway systemd service starts correctly.
-4. Test emergency rollback procedure.
+1. Merge a trivial change (e.g. a comment) from `main-internal` into
+   `production` via PR.
+2. Wait for the nightly deploy timer to fire (or trigger it manually:
+   `sudo systemctl start gateway-deploy.service`).
+3. Verify the deploy log (`/var/log/gateway-deploy.log`) shows the new
+   commit hash.
+4. Verify the gateway process is running the new build (`/status` Discord
+   command or `systemctl status gateway.service`).
+5. Test the emergency rollback procedure from INFRASTRUCTURE.md Section 4.5:
+   reset to the previous commit, rebuild, restart, verify service recovers.
 
-**Acceptance:** Deploy pipeline works. Gateway starts as a systemd service.
-Rollback restores the previous version.
+**Acceptance:** Deploy pipeline picks up `production` branch changes and
+restarts the gateway. Rollback procedure restores the previous version
+cleanly. All steps verified on the production device.
 
 ---
 
@@ -932,11 +1015,12 @@ Rollback restores the previous version.
 | `skills/quote-draft.ts` | Quote Draft Preparation skill |
 | `skills/inquiry-triage.ts` | Client Inquiry Triage skill |
 | `skills/audit-log.ts` | Audit Log query skill |
-| `SECURITY.md` | Closed-skill security policy |
-| `CHANGELOG.md` | Fork changelog |
+| `skills/hitl-approve.ts` | HITL Accept/Reject approval skill |
+| `src/e2e/voice-to-job-note.e2e.test.ts` | E2E test for Voice-to-Job-Note |
 | `docs/internal/DISCORD_CONFIG_TEMPLATE.md` | Gateway config template |
 | `docs/internal/DISCORD_SETUP_CHECKLIST.md` | Discord server setup guide |
 | `docs/internal/PILOT_CHECKLIST.md` | Pre-pilot readiness checklist |
+| `docs/internal/CONFIGURATION_REFERENCE.md` | Filled-in infrastructure reference values |
 
 ---
 
@@ -952,6 +1036,9 @@ Rollback restores the previous version.
 | `src/discord/monitor/message-handler.process.ts` | Populate `SenderRoles` |
 | `src/gateway/server-startup.ts` | Add skill loading step |
 | `src/gateway/boot.ts` | Wire skill registry into context |
+| `src/discord/monitor/allow-list.test.ts` | Add role/channel matrix test cases (Task 3.8) |
+| `SECURITY.md` | Replace upstream content with closed-skill policy |
+| `CHANGELOG.md` | Add fork-specific entries beginning with ClawHub removal |
 
 ---
 
@@ -966,6 +1053,7 @@ Task 1.5 (HITL Middleware) ── depends on 1.3, 1.4
 Task 1.6 (SenderRoles) ────── standalone
 Task 1.7 (Channel Config) ── depends on 1.6
 Task 1.8 (Discord Docs) ───── depends on 1.7
+Task 1.9 (Device Provision) ─ standalone (infra); can start after fork
 
 Task 2.1 (Skill Loader) ───── standalone
 Task 2.2 (Startup Gate) ───── depends on 2.1
@@ -984,7 +1072,7 @@ Task 3.7 (PII Verify) ─────── depends on 2.5, 2.3
 Task 3.8 (Role Verify) ────── depends on 1.7
 
 Task 4.1 (E2E Test) ────────── depends on 3.2, all Phase 2
-Task 4.2 (Deploy Verify) ──── standalone (infra)
+Task 4.2 (Deploy Verify) ──── depends on 1.9 (production device provisioned)
 Task 4.3 (Pilot Checklist) ── depends on all above
 ```
 
