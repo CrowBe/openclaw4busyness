@@ -18,6 +18,14 @@ This fork takes OpenClaw's self-hosted gateway architecture and tailors it for t
 - **PII minimisation** — Client data replaced with reference tokens before sending to model API.
 - **Audit logging** — All skill executions and approval decisions written to an append-only log.
 
+## Sponsors
+
+| OpenAI                                                            | Blacksmith                                                                   |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [![OpenAI](docs/assets/sponsors/openai.svg)](https://openai.com/) | [![Blacksmith](docs/assets/sponsors/blacksmith.svg)](https://blacksmith.sh/) |
+
+**Subscriptions (OAuth):**
+
 ## MVP Workflows
 
 | Workflow                | Role            | HITL                                |
