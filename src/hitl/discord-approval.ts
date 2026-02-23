@@ -4,6 +4,31 @@ export type HitlDiscordApprovalMessage = {
   actionId: string;
 };
 
+/**
+ * Send a HITL approval message to a Discord channel via the REST API.
+ * The token must be a valid Discord bot token.
+ * Errors are re-thrown so the caller can decide whether to swallow them.
+ */
+export async function sendHitlApprovalMessage(params: {
+  message: HitlDiscordApprovalMessage;
+  token: string;
+}): Promise<void> {
+  const { message, token } = params;
+  const url = `https://discord.com/api/v10/channels/${message.channelId}/messages`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bot ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content: message.content }),
+  });
+  if (!response.ok) {
+    const body = await response.text().catch(() => "(unreadable)");
+    throw new Error(`Discord channel message failed: HTTP ${response.status} — ${body}`);
+  }
+}
+
 export function buildHitlApprovalMessage(params: {
   actionId: string;
   skillName: string;

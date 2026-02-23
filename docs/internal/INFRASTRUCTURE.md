@@ -636,7 +636,48 @@ sudo systemctl enable --now gateway.service
 
 ---
 
-## 10. Configuration Reference
+## 10. Runtime Dependencies
+
+### 10.1 Whisper CLI (voice-note skill)
+
+The `voice-note` skill uses the external `whisper` binary for speech-to-text
+transcription. The gateway checks for its presence at startup and logs a warning
+if it is not found; this is a non-fatal warning so the rest of the gateway
+starts normally.
+
+**Install on Ubuntu / Debian (business device):**
+
+```bash
+# Python package (GPU and CPU support)
+pip install openai-whisper
+
+# FFmpeg is required for audio decoding
+sudo apt install ffmpeg
+```
+
+**Install on macOS (development):**
+
+```bash
+brew install openai-whisper
+brew install ffmpeg
+```
+
+**Verify installation:**
+
+```bash
+whisper --version
+```
+
+If `whisper` is not on the system `PATH`, the `voice-note` skill will return an
+error when invoked. Add the Python binary directory to `PATH` if needed:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+---
+
+## 11. Configuration Reference
 
 All values are left blank intentionally. Fill in during initial provisioning.
 

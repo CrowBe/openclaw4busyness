@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import path from "node:path";
+import { resolveStateDir } from "../config/paths.js";
 import { requireNodeSqlite } from "../memory/sqlite.js";
 import { ensureAuditSchema } from "./schema.js";
 import type { AuditEvent, AuditQuery, CreateAuditEventParams } from "./types.js";
@@ -106,4 +108,21 @@ export class AuditStore {
       channel_id: (row.channel_id as string | null) ?? null,
     }));
   }
+}
+
+// Singleton per dbPath — avoids re-opening the database on every skill call.
+const auditStoreCache = new Map<string, AuditStore>();
+
+/**
+ * Return a cached AuditStore for the given database path.
+ * When `dbPath` is omitted the default state directory is used.
+ */
+export function getAuditStore(dbPath?: string): AuditStore {
+  const resolved = dbPath ?? path.join(resolveStateDir(process.env), "audit.db");
+  let store = auditStoreCache.get(resolved);
+  if (!store) {
+    store = new AuditStore(resolved);
+    auditStoreCache.set(resolved, store);
+  }
+  return store;
 }
