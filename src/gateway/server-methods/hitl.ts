@@ -93,7 +93,7 @@ export const hitlHandlers: GatewayRequestHandlers = {
     respond(true, { action }, undefined);
   },
 
-  "hitl.accept": ({ params, respond }) => {
+  "hitl.accept": ({ params, respond, context }) => {
     const { id, decided_by } = params;
     if (!id || typeof id !== "string") {
       respond(
@@ -122,10 +122,11 @@ export const hitlHandlers: GatewayRequestHandlers = {
       );
       return;
     }
+    context.broadcast("hitl.action.resolved", { action, decision: "accepted" });
     respond(true, { action }, undefined);
   },
 
-  "hitl.reject": ({ params, respond }) => {
+  "hitl.reject": ({ params, respond, context }) => {
     const { id, decided_by, reason } = params;
     if (!id || typeof id !== "string") {
       respond(
@@ -158,10 +159,11 @@ export const hitlHandlers: GatewayRequestHandlers = {
       );
       return;
     }
+    context.broadcast("hitl.action.resolved", { action, decision: "rejected" });
     respond(true, { action }, undefined);
   },
 
-  "hitl.submit": ({ params, respond }) => {
+  "hitl.submit": ({ params, respond, context }) => {
     const {
       skill_name,
       action_type,
@@ -242,6 +244,8 @@ export const hitlHandlers: GatewayRequestHandlers = {
       session_key,
       channel_id,
     });
+    // Notify connected operator clients (e.g. Discord HITL approval monitor)
+    context.broadcast("hitl.action.submitted", { action });
     respond(true, { action }, undefined);
   },
 };
