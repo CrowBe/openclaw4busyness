@@ -13,6 +13,9 @@ const EVENT_SCOPE_GUARDS: Record<string, string[]> = {
   "device.pair.resolved": [PAIRING_SCOPE],
   "node.pair.requested": [PAIRING_SCOPE],
   "node.pair.resolved": [PAIRING_SCOPE],
+  // HITL approval events (fork-specific)
+  "hitl.action.submitted": [APPROVALS_SCOPE],
+  "hitl.action.resolved": [APPROVALS_SCOPE],
 };
 
 export type GatewayBroadcastStateVersion = {
