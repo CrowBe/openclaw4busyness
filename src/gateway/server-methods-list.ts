@@ -43,7 +43,6 @@ const BASE_METHODS = [
   "agents.files.set",
   "skills.status",
   "skills.bins",
-  "skills.install",
   "skills.update",
   "update.run",
   "voicewake.get",
@@ -92,6 +91,12 @@ const BASE_METHODS = [
   "chat.history",
   "chat.abort",
   "chat.send",
+  // HITL approval queue
+  "hitl.list",
+  "hitl.get",
+  "hitl.accept",
+  "hitl.reject",
+  "hitl.submit",
 ];
 
 export function listGatewayMethods(): string[] {

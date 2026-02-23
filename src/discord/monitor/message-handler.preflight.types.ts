@@ -79,6 +79,7 @@ export type DiscordMessagePreflightContext = {
   canDetectMention: boolean;
 
   historyEntry?: HistoryEntry;
+  memberRoleIds: string[];
 };
 
 export type DiscordMessagePreflightParams = {

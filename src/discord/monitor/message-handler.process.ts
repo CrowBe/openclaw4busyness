@@ -96,6 +96,7 @@ export async function processDiscordMessage(ctx: DiscordMessagePreflightContext)
     baseSessionKey,
     route,
     commandAuthorized,
+    memberRoleIds,
   } = ctx;
 
   const mediaList = await resolveMediaList(message, mediaMaxBytes);
@@ -329,6 +330,7 @@ export async function processDiscordMessage(ctx: DiscordMessagePreflightContext)
     ChatType: isDirectMessage ? "direct" : "channel",
     ConversationLabel: fromLabel,
     SenderName: senderName,
+    SenderRoles: isGuildMessage ? memberRoleIds : undefined,
     SenderId: sender.id,
     SenderUsername: senderUsername,
     SenderTag: senderTag,

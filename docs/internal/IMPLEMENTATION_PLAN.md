@@ -183,6 +183,7 @@ or `client_facing` is `true`, the middleware:
 layer, not at the skill level.
 
 **Tests:** `src/hitl/middleware.test.ts` -- unit tests covering:
+
 - Financial skill is routed through HITL.
 - Client-facing skill is routed through HITL.
 - Read-only skill bypasses HITL.
@@ -244,15 +245,15 @@ matrix from the build plan using OpenClaw's native per-channel configuration.
 Create a config template matching the channel structure from
 INFRASTRUCTURE.md Sections 5.3 and 5.5:
 
-| Channel        | Roles                                  | Skills (MVP)                           | Post-MVP only              |
-|----------------|----------------------------------------|----------------------------------------|----------------------------|
-| `#job-reports` | Field Worker, Office Operator, Admin   | `voice-note`, `field-report`           |                            |
-| `#timesheets`  | Field Worker, Office Operator, Admin   | *(no bot interaction at MVP)*          | `timesheet`                |
-| `#operations`  | Office Operator, Admin                 | `quote-draft`, `inquiry-triage`        | `summary`, `schedule`      |
-| `#approvals`   | Office Operator, Admin                 | `hitl-approve`                         |                            |
-| `#content`     | Office Operator, Admin                 | *(no bot interaction at MVP)*          | content pipeline skills    |
-| `#admin-only`  | Admin                                  | `audit-log`                            | `status`, `deploy`         |
-| `#bot-log`     | Admin                                  | (logging output only, no skills)       |                            |
+| Channel        | Roles                                | Skills (MVP)                     | Post-MVP only           |
+| -------------- | ------------------------------------ | -------------------------------- | ----------------------- |
+| `#job-reports` | Field Worker, Office Operator, Admin | `voice-note`, `field-report`     |                         |
+| `#timesheets`  | Field Worker, Office Operator, Admin | _(no bot interaction at MVP)_    | `timesheet`             |
+| `#operations`  | Office Operator, Admin               | `quote-draft`, `inquiry-triage`  | `summary`, `schedule`   |
+| `#approvals`   | Office Operator, Admin               | `hitl-approve`                   |                         |
+| `#content`     | Office Operator, Admin               | _(no bot interaction at MVP)_    | content pipeline skills |
+| `#admin-only`  | Admin                                | `audit-log`                      | `status`, `deploy`      |
+| `#bot-log`     | Admin                                | (logging output only, no skills) |                         |
 
 Skill names in the config must exactly match the `metadata.name` field
 exported by each skill module (e.g. `voice-note` maps to the `name`
@@ -567,7 +568,7 @@ based on output type.
 **How:** Define the output type classification from build plan Section 3.2.2:
 
 ```typescript
-type OutputType = 'internal' | 'client_facing' | 'financial' | 'system_modify';
+type OutputType = "internal" | "client_facing" | "financial" | "system_modify";
 
 const HITL_REQUIRED: Record<OutputType, boolean> = {
   internal: false,
@@ -606,6 +607,7 @@ to the sender for confirmation.
 - `src/voice/types.ts` -- new file. Transcription types.
 
 **How:** OpenClaw already has voice infrastructure:
+
 - `src/discord/voice/` -- voice channel management.
 - `src/discord/voice-message.ts` -- voice message handling.
 - `src/media-understanding/` -- media processing pipeline.
@@ -984,61 +986,61 @@ cleanly. All steps verified on the production device.
 
 ## 6. New Files Summary
 
-| Path | Purpose |
-|------|---------|
-| `src/hitl/schema.ts` | HITL pending_actions SQLite table |
-| `src/hitl/store.ts` | HITL CRUD operations |
-| `src/hitl/types.ts` | HITL type definitions |
-| `src/hitl/middleware.ts` | Skill execution gate |
-| `src/hitl/skill-metadata.ts` | Skill metadata validation |
-| `src/hitl/gateway-handlers.ts` | Gateway WebSocket method handlers |
-| `src/hitl/discord-components.ts` | Discord interactive buttons |
-| `src/skills/loader.ts` | Closed skill registry loader |
-| `src/skills/types.ts` | Skill interface and metadata types |
-| `src/skills/registry.ts` | In-memory skill registry |
-| `src/audit/schema.ts` | Audit log SQLite table |
-| `src/audit/store.ts` | Append-only audit log operations |
-| `src/audit/types.ts` | Audit entry type definitions |
-| `src/pii/scrubber.ts` | PII scrubbing middleware |
-| `src/pii/types.ts` | PII field definitions |
-| `src/pii/resolver.ts` | Token-to-PII reverse resolution |
-| `src/pii/verify.ts` | PII scrubbing verification |
-| `src/voice/transcribe.ts` | Whisper transcription wrapper |
-| `src/voice/types.ts` | Transcription types |
-| `src/background/types.ts` | Background task output types |
-| `src/background/executor.ts` | Background task executor |
-| `src/background/registry.ts` | Background task registration |
-| `src/jobs/store.ts` | Job record storage |
-| `src/jobs/types.ts` | Job record types |
-| `skills/voice-note.ts` | Voice-to-Job-Note skill |
-| `skills/field-report.ts` | Field Report Submission skill |
-| `skills/quote-draft.ts` | Quote Draft Preparation skill |
-| `skills/inquiry-triage.ts` | Client Inquiry Triage skill |
-| `skills/audit-log.ts` | Audit Log query skill |
-| `skills/hitl-approve.ts` | HITL Accept/Reject approval skill |
-| `src/e2e/voice-to-job-note.e2e.test.ts` | E2E test for Voice-to-Job-Note |
-| `docs/internal/DISCORD_CONFIG_TEMPLATE.md` | Gateway config template |
-| `docs/internal/DISCORD_SETUP_CHECKLIST.md` | Discord server setup guide |
-| `docs/internal/PILOT_CHECKLIST.md` | Pre-pilot readiness checklist |
+| Path                                       | Purpose                                   |
+| ------------------------------------------ | ----------------------------------------- |
+| `src/hitl/schema.ts`                       | HITL pending_actions SQLite table         |
+| `src/hitl/store.ts`                        | HITL CRUD operations                      |
+| `src/hitl/types.ts`                        | HITL type definitions                     |
+| `src/hitl/middleware.ts`                   | Skill execution gate                      |
+| `src/hitl/skill-metadata.ts`               | Skill metadata validation                 |
+| `src/hitl/gateway-handlers.ts`             | Gateway WebSocket method handlers         |
+| `src/hitl/discord-components.ts`           | Discord interactive buttons               |
+| `src/skills/loader.ts`                     | Closed skill registry loader              |
+| `src/skills/types.ts`                      | Skill interface and metadata types        |
+| `src/skills/registry.ts`                   | In-memory skill registry                  |
+| `src/audit/schema.ts`                      | Audit log SQLite table                    |
+| `src/audit/store.ts`                       | Append-only audit log operations          |
+| `src/audit/types.ts`                       | Audit entry type definitions              |
+| `src/pii/scrubber.ts`                      | PII scrubbing middleware                  |
+| `src/pii/types.ts`                         | PII field definitions                     |
+| `src/pii/resolver.ts`                      | Token-to-PII reverse resolution           |
+| `src/pii/verify.ts`                        | PII scrubbing verification                |
+| `src/voice/transcribe.ts`                  | Whisper transcription wrapper             |
+| `src/voice/types.ts`                       | Transcription types                       |
+| `src/background/types.ts`                  | Background task output types              |
+| `src/background/executor.ts`               | Background task executor                  |
+| `src/background/registry.ts`               | Background task registration              |
+| `src/jobs/store.ts`                        | Job record storage                        |
+| `src/jobs/types.ts`                        | Job record types                          |
+| `skills/voice-note.ts`                     | Voice-to-Job-Note skill                   |
+| `skills/field-report.ts`                   | Field Report Submission skill             |
+| `skills/quote-draft.ts`                    | Quote Draft Preparation skill             |
+| `skills/inquiry-triage.ts`                 | Client Inquiry Triage skill               |
+| `skills/audit-log.ts`                      | Audit Log query skill                     |
+| `skills/hitl-approve.ts`                   | HITL Accept/Reject approval skill         |
+| `src/e2e/voice-to-job-note.e2e.test.ts`    | E2E test for Voice-to-Job-Note            |
+| `docs/internal/DISCORD_CONFIG_TEMPLATE.md` | Gateway config template                   |
+| `docs/internal/DISCORD_SETUP_CHECKLIST.md` | Discord server setup guide                |
+| `docs/internal/PILOT_CHECKLIST.md`         | Pre-pilot readiness checklist             |
 | `docs/internal/CONFIGURATION_REFERENCE.md` | Filled-in infrastructure reference values |
 
 ---
 
 ## 7. Existing Files to Modify
 
-| Path | Change |
-|------|--------|
-| `src/gateway/server-methods/skills.ts` | Remove `skills.install` handler |
-| `src/infra/skills-remote.ts` | Remove or stub |
-| `src/agents/skills-install.ts` | Remove |
-| `src/gateway/server-methods-list.ts` | Add HITL handlers |
-| `src/auto-reply/templating.ts` | Add `SenderRoles` to `MsgContext` |
-| `src/discord/monitor/message-handler.process.ts` | Populate `SenderRoles` |
-| `src/gateway/server-startup.ts` | Add skill loading step |
-| `src/gateway/boot.ts` | Wire skill registry into context |
-| `src/discord/monitor/allow-list.test.ts` | Add role/channel matrix test cases (Task 3.8) |
-| `SECURITY.md` | Replace upstream content with closed-skill policy |
-| `CHANGELOG.md` | Add fork-specific entries beginning with ClawHub removal |
+| Path                                             | Change                                                   |
+| ------------------------------------------------ | -------------------------------------------------------- |
+| `src/gateway/server-methods/skills.ts`           | Remove `skills.install` handler                          |
+| `src/infra/skills-remote.ts`                     | Remove or stub                                           |
+| `src/agents/skills-install.ts`                   | Remove                                                   |
+| `src/gateway/server-methods-list.ts`             | Add HITL handlers                                        |
+| `src/auto-reply/templating.ts`                   | Add `SenderRoles` to `MsgContext`                        |
+| `src/discord/monitor/message-handler.process.ts` | Populate `SenderRoles`                                   |
+| `src/gateway/server-startup.ts`                  | Add skill loading step                                   |
+| `src/gateway/boot.ts`                            | Wire skill registry into context                         |
+| `src/discord/monitor/allow-list.test.ts`         | Add role/channel matrix test cases (Task 3.8)            |
+| `SECURITY.md`                                    | Replace upstream content with closed-skill policy        |
+| `CHANGELOG.md`                                   | Add fork-specific entries beginning with ClawHub removal |
 
 ---
 
@@ -1092,15 +1094,15 @@ Coverage thresholds: 70% lines/branches/functions/statements (V8).
 
 ## 10. User Story to Task Mapping
 
-| User Story | Primary Tasks |
-|------------|---------------|
-| US-01: Voice-to-Job-Note | 3.1, 3.2 |
-| US-02: Field Report Submission | 3.3 |
-| US-03: Quote Draft Preparation | 3.4 |
-| US-04: Client Inquiry Triage | 3.5 |
-| US-05: HITL Approval via Discord | 1.3, 1.4, 1.5, 3.6 |
-| US-06: Audit Log Access | 2.3, 2.4 |
-| US-07: PII Scrubbing Verification | 2.5, 3.7 |
-| US-08: Role-Based Channel Access | 1.6, 1.7, 3.8 |
-| US-09: Skill Metadata Enforcement | 2.1, 2.2 |
-| US-10: Voice Transcription Confirmation | 3.1, 3.2 |
+| User Story                              | Primary Tasks      |
+| --------------------------------------- | ------------------ |
+| US-01: Voice-to-Job-Note                | 3.1, 3.2           |
+| US-02: Field Report Submission          | 3.3                |
+| US-03: Quote Draft Preparation          | 3.4                |
+| US-04: Client Inquiry Triage            | 3.5                |
+| US-05: HITL Approval via Discord        | 1.3, 1.4, 1.5, 3.6 |
+| US-06: Audit Log Access                 | 2.3, 2.4           |
+| US-07: PII Scrubbing Verification       | 2.5, 3.7           |
+| US-08: Role-Based Channel Access        | 1.6, 1.7, 3.8      |
+| US-09: Skill Metadata Enforcement       | 2.1, 2.2           |
+| US-10: Voice Transcription Confirmation | 3.1, 3.2           |

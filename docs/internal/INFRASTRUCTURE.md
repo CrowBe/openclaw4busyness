@@ -32,16 +32,16 @@ devices.
 > because it scopes the business device to a single repository and avoids any
 > credential leakage (no personal tokens stored on the production device).
 
-| Attribute | Development | Production |
-| --- | --- | --- |
-| Device | Personal laptop / workstation | Dedicated business device (always-on mini PC) |
-| GitHub access | Personal account with full repo access | Read-only SSH deploy key (production branch only) |
-| Anthropic API key | Personal key | Business key |
-| Discord permissions | Personal admin account | No admin permissions -- gateway acts as bot only |
-| Codebase scope | Full access, skill authoring & testing | Runs gateway process only (permanent systemd service) |
-| Data | No client/job data | All client/job data stored here only |
-| Writes to | `main-internal` branch | Does not write to the repository |
-| Runtime requirements | Node.js >= 22.12, pnpm 10.23 | Node.js >= 22.12, pnpm 10.23 |
+| Attribute            | Development                            | Production                                            |
+| -------------------- | -------------------------------------- | ----------------------------------------------------- |
+| Device               | Personal laptop / workstation          | Dedicated business device (always-on mini PC)         |
+| GitHub access        | Personal account with full repo access | Read-only SSH deploy key (production branch only)     |
+| Anthropic API key    | Personal key                           | Business key                                          |
+| Discord permissions  | Personal admin account                 | No admin permissions -- gateway acts as bot only      |
+| Codebase scope       | Full access, skill authoring & testing | Runs gateway process only (permanent systemd service) |
+| Data                 | No client/job data                     | All client/job data stored here only                  |
+| Writes to            | `main-internal` branch                 | Does not write to the repository                      |
+| Runtime requirements | Node.js >= 22.12, pnpm 10.23           | Node.js >= 22.12, pnpm 10.23                          |
 
 ---
 
@@ -288,23 +288,23 @@ gateway bot validates the sender role in every message handler.
 
 ### 5.2 Role Structure
 
-| Role | Assigned To | Access | Capabilities |
-| --- | --- | --- | --- |
-| **Admin** | Developer personal account | Full server management, all channels | All skills + system commands |
-| **Office Operator** | Office staff | Operator channels only | Quote/inquiry/HITL/summary skills |
-| **Field Worker** | On-site staff | `#job-reports` and `#timesheets` only | Voice/text notes and reports |
+| Role                | Assigned To                | Access                                | Capabilities                      |
+| ------------------- | -------------------------- | ------------------------------------- | --------------------------------- |
+| **Admin**           | Developer personal account | Full server management, all channels  | All skills + system commands      |
+| **Office Operator** | Office staff               | Operator channels only                | Quote/inquiry/HITL/summary skills |
+| **Field Worker**    | On-site staff              | `#job-reports` and `#timesheets` only | Voice/text notes and reports      |
 
 ### 5.3 Channel Structure
 
-| Channel | Minimum Role | Purpose |
-| --- | --- | --- |
-| `#job-reports` | Field Worker | Voice notes, text notes, field reports |
-| `#timesheets` | Field Worker | Daily timesheet submissions |
-| `#operations` | Office Operator | Daily workflow |
-| `#approvals` | Office Operator | Dedicated HITL approval queue |
-| `#content` | Office Operator | Content ideation (post-MVP) |
-| `#admin-only` | Admin | System status, deploy log, audit log |
-| `#bot-log` | Admin | Gateway event log (append-only) |
+| Channel        | Minimum Role    | Purpose                                |
+| -------------- | --------------- | -------------------------------------- |
+| `#job-reports` | Field Worker    | Voice notes, text notes, field reports |
+| `#timesheets`  | Field Worker    | Daily timesheet submissions            |
+| `#operations`  | Office Operator | Daily workflow                         |
+| `#approvals`   | Office Operator | Dedicated HITL approval queue          |
+| `#content`     | Office Operator | Content ideation (post-MVP)            |
+| `#admin-only`  | Admin           | System status, deploy log, audit log   |
+| `#bot-log`     | Admin           | Gateway event log (append-only)        |
 
 ### 5.4 Server Setup Procedure
 
@@ -465,12 +465,12 @@ Unattended-Upgrade::Automatic-Reboot "false";
 
 ### 7.1 Secrets Inventory
 
-| Secret | Location | Notes |
-| --- | --- | --- |
-| Business Anthropic API key | `.env` on business device only | Never committed to the repository |
-| Discord bot token | `.env` on business device only | Never committed to the repository |
-| Business device SSH private key | Developer personal machine only | Used for maintenance access |
-| GitHub deploy key (private) | Business device `~/.ssh/` only | Read-only, repository-scoped |
+| Secret                          | Location                        | Notes                             |
+| ------------------------------- | ------------------------------- | --------------------------------- |
+| Business Anthropic API key      | `.env` on business device only  | Never committed to the repository |
+| Discord bot token               | `.env` on business device only  | Never committed to the repository |
+| Business device SSH private key | Developer personal machine only | Used for maintenance access       |
+| GitHub deploy key (private)     | Business device `~/.ssh/` only  | Read-only, repository-scoped      |
 
 ### 7.2 The `.env` File
 
@@ -500,11 +500,11 @@ immediately if a compromise is suspected.
 
 ### 8.1 What Needs Backing Up
 
-| Item | Location | Priority |
-| --- | --- | --- |
-| Gateway database (SQLite) | `/opt/gateway/data/` | Critical |
-| `.env` file | `/opt/gateway/.env` | Critical (encrypted) |
-| Gateway config (if customised) | `/opt/gateway/config/` | Important |
+| Item                           | Location               | Priority             |
+| ------------------------------ | ---------------------- | -------------------- |
+| Gateway database (SQLite)      | `/opt/gateway/data/`   | Critical             |
+| `.env` file                    | `/opt/gateway/.env`    | Critical (encrypted) |
+| Gateway config (if customised) | `/opt/gateway/config/` | Important            |
 
 ### 8.2 Backup Procedure
 
@@ -640,30 +640,30 @@ sudo systemctl enable --now gateway.service
 
 All values are left blank intentionally. Fill in during initial provisioning.
 
-| Key | Value | Notes |
-| --- | --- | --- |
-| Business device hostname | | |
-| Business device LAN IP | | |
-| Developer SSH public key fingerprint | | |
-| Deploy key fingerprint | | |
-| GitHub repository URL | `https://github.com/CrowBe/openclaw4busyness` | Public repository |
-| Production branch | `production` | |
-| Discord server ID (guild ID) | | |
-| Discord bot application ID | | |
-| `#job-reports` channel ID | | |
-| `#timesheets` channel ID | | |
-| `#operations` channel ID | | |
-| `#approvals` channel ID | | |
-| `#content` channel ID | | |
-| `#admin-only` channel ID | | |
-| `#bot-log` channel ID | | |
-| Admin role ID | | |
-| Office Operator role ID | | |
-| Field Worker role ID | | |
-| Backblaze B2 bucket name | | |
-| Backup GPG passphrase location | `/opt/gateway/.backup-passphrase` | |
-| Node.js version | >= 22.12 | Required by OpenClaw |
-| pnpm version | >= 10.23 | Required by OpenClaw |
-| Deploy timer schedule | 02:30 UTC (+ up to 10 min jitter) | |
-| Backup timer schedule | 03:00 UTC (+ up to 5 min jitter) | |
-| Key rotation interval | 6 months minimum | |
+| Key                                  | Value                                         | Notes                |
+| ------------------------------------ | --------------------------------------------- | -------------------- |
+| Business device hostname             |                                               |                      |
+| Business device LAN IP               |                                               |                      |
+| Developer SSH public key fingerprint |                                               |                      |
+| Deploy key fingerprint               |                                               |                      |
+| GitHub repository URL                | `https://github.com/CrowBe/openclaw4busyness` | Public repository    |
+| Production branch                    | `production`                                  |                      |
+| Discord server ID (guild ID)         |                                               |                      |
+| Discord bot application ID           |                                               |                      |
+| `#job-reports` channel ID            |                                               |                      |
+| `#timesheets` channel ID             |                                               |                      |
+| `#operations` channel ID             |                                               |                      |
+| `#approvals` channel ID              |                                               |                      |
+| `#content` channel ID                |                                               |                      |
+| `#admin-only` channel ID             |                                               |                      |
+| `#bot-log` channel ID                |                                               |                      |
+| Admin role ID                        |                                               |                      |
+| Office Operator role ID              |                                               |                      |
+| Field Worker role ID                 |                                               |                      |
+| Backblaze B2 bucket name             |                                               |                      |
+| Backup GPG passphrase location       | `/opt/gateway/.backup-passphrase`             |                      |
+| Node.js version                      | >= 22.12                                      | Required by OpenClaw |
+| pnpm version                         | >= 10.23                                      | Required by OpenClaw |
+| Deploy timer schedule                | 02:30 UTC (+ up to 10 min jitter)             |                      |
+| Backup timer schedule                | 03:00 UTC (+ up to 5 min jitter)              |                      |
+| Key rotation interval                | 6 months minimum                              |                      |
