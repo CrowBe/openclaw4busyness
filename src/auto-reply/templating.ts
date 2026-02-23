@@ -106,6 +106,7 @@ export type MsgContext = {
   /** Explicit owner allowlist overrides (trusted, configuration-derived). */
   OwnerAllowFrom?: Array<string | number>;
   SenderName?: string;
+  SenderRoles?: string[];
   SenderId?: string;
   SenderUsername?: string;
   SenderTag?: string;

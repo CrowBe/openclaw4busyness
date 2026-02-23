@@ -20,12 +20,12 @@ This fork takes OpenClaw's self-hosted gateway architecture and tailors it for t
 
 ## MVP Workflows
 
-| Workflow | Role | HITL |
-|----------|------|------|
-| Voice-to-Job-Note | Field Worker | Yes (sender confirms transcription) |
-| Field Report Submission | Field Worker | No (internal record) |
-| Quote Draft Preparation | Office Operator | Yes (operator approves) |
-| Client Inquiry Triage | Office Operator | Yes (operator approves response) |
+| Workflow                | Role            | HITL                                |
+| ----------------------- | --------------- | ----------------------------------- |
+| Voice-to-Job-Note       | Field Worker    | Yes (sender confirms transcription) |
+| Field Report Submission | Field Worker    | No (internal record)                |
+| Quote Draft Preparation | Office Operator | Yes (operator approves)             |
+| Client Inquiry Triage   | Office Operator | Yes (operator approves response)    |
 
 ## From source (development)
 

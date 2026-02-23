@@ -651,5 +651,6 @@ export async function preflightDiscordMessage(
     effectiveWasMentioned,
     canDetectMention,
     historyEntry,
+    memberRoleIds,
   };
 }

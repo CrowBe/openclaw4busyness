@@ -2,6 +2,12 @@
 
 Docs: https://docs.openclaw.ai
 
+## fork-1.1 (2026-02-21) — ClawHub Skill Registry Removed
+
+### Fork-Specific Changes
+
+- Skills/Security: remove `skills.install` handler and ClawHub remote skill registry. Skills may only be loaded from the local /skills directory. Dynamic skill installation via the `skills.install` gateway method is permanently disabled. All skills must be reviewed and committed to the repository before deployment.
+
 ## 2026.2.21 (Unreleased)
 
 ### Changes

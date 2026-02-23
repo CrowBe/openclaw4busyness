@@ -59,13 +59,13 @@ modification. A fork is preferred over a direct deployment for three reasons:
 
 ### 3.1 Removals
 
-| Component | Reason |
-|---|---|
-| **ClawHub skill registry** | Primary vector for third-party code injection. Entire module removed. |
-| **Dynamic skill installation at runtime** | No skill may be loaded without a build/deploy cycle. |
-| **Proactive/cron-triggered autonomous actions (unconstrained)** | Replaced with governed background task framework. |
-| **Moltbook/social agent integration** | Not relevant; increases attack surface. |
-| **Multi-user single-scope model** | Replaced with role-scoped permission model. |
+| Component                                                       | Reason                                                                |
+| --------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **ClawHub skill registry**                                      | Primary vector for third-party code injection. Entire module removed. |
+| **Dynamic skill installation at runtime**                       | No skill may be loaded without a build/deploy cycle.                  |
+| **Proactive/cron-triggered autonomous actions (unconstrained)** | Replaced with governed background task framework.                     |
+| **Moltbook/social agent integration**                           | Not relevant; increases attack surface.                               |
+| **Multi-user single-scope model**                               | Replaced with role-scoped permission model.                           |
 
 ### 3.2 Additions and Modifications
 
@@ -92,12 +92,12 @@ metadata may bypass the approval queue. Enforced at gateway middleware layer.
 
 Output type determines HITL requirement:
 
-| Output type | HITL required? | Examples |
-|---|---|---|
-| Internal/informational | No | Summaries, digests, drafts for internal review |
-| Client-facing communication | Yes | Any message intended for a client |
-| Financial commitment | Yes | Purchase orders, quotes, invoices |
-| System modification (external writes) | Yes | Website publish, external API writes |
+| Output type                           | HITL required? | Examples                                       |
+| ------------------------------------- | -------------- | ---------------------------------------------- |
+| Internal/informational                | No             | Summaries, digests, drafts for internal review |
+| Client-facing communication           | Yes            | Any message intended for a client              |
+| Financial commitment                  | Yes            | Purchase orders, quotes, invoices              |
+| System modification (external writes) | Yes            | Website publish, external API writes           |
 
 **Design rule:** Background tasks writing to external systems must pass through
 HITL regardless of content.
@@ -106,11 +106,11 @@ HITL regardless of content.
 
 Discord channel/role structure:
 
-| Role | Channels | Capabilities |
-|---|---|---|
-| **Field Worker** | `#job-reports`, `#timesheets` | Voice-to-job-note, field report submission |
+| Role                | Channels                               | Capabilities                                                                   |
+| ------------------- | -------------------------------------- | ------------------------------------------------------------------------------ |
+| **Field Worker**    | `#job-reports`, `#timesheets`          | Voice-to-job-note, field report submission                                     |
 | **Office Operator** | `#operations`, `#quotes`, `#inquiries` | All Field Worker skills + quote draft, inquiry triage, HITL approval/rejection |
-| **Admin** | All channels, all skills | Audit log, system status, skill deployment |
+| **Admin**           | All channels, all skills               | Audit log, system status, skill deployment                                     |
 
 > **Implementation Note -- Existing Infrastructure:** OpenClaw's Discord
 > extension already supports role-scoped access natively. The following
@@ -163,21 +163,21 @@ admin operator.
 
 ### 4.1 MVP Workflows
 
-| Workflow | Actor | Description | HITL |
-|---|---|---|---|
-| Voice-to-Job-Note | Field Worker | Voice message -> transcribe -> confirm -> write to job record | Yes (sender confirms) |
-| Field Report Submission | Field Worker | Free-text/structured report via Discord | No (internal record only) |
-| Quote Draft Preparation | Office Operator | Job details -> draft quote -> operator reviews/approves | Yes |
-| Client Inquiry Triage | Office Operator | Categorise inquiry, prepare draft response | Yes |
+| Workflow                | Actor           | Description                                                   | HITL                      |
+| ----------------------- | --------------- | ------------------------------------------------------------- | ------------------------- |
+| Voice-to-Job-Note       | Field Worker    | Voice message -> transcribe -> confirm -> write to job record | Yes (sender confirms)     |
+| Field Report Submission | Field Worker    | Free-text/structured report via Discord                       | No (internal record only) |
+| Quote Draft Preparation | Office Operator | Job details -> draft quote -> operator reviews/approves       | Yes                       |
+| Client Inquiry Triage   | Office Operator | Categorise inquiry, prepare draft response                    | Yes                       |
 
 ### 4.2 Build Phases
 
-| Phase | Weeks | Deliverables |
-|---|---|---|
-| **Phase 1: Repository and Infrastructure** | 1--2 | Fork, ClawHub removed, HITL queue schema, role-scoped router, Discord server, hardware |
-| **Phase 2: Core Skill Framework** | 3--4 | Skill loader, metadata enforcement, audit log, PII scrubber, background task scaffold |
-| **Phase 3: MVP Workflow Skills** | 5--7 | All 4 skills implemented, HITL and role-scoping verified |
-| **Phase 4: Pilot and Observation** | 8 | Real usage, issues triaged, success criteria evaluated |
+| Phase                                      | Weeks | Deliverables                                                                           |
+| ------------------------------------------ | ----- | -------------------------------------------------------------------------------------- |
+| **Phase 1: Repository and Infrastructure** | 1--2  | Fork, ClawHub removed, HITL queue schema, role-scoped router, Discord server, hardware |
+| **Phase 2: Core Skill Framework**          | 3--4  | Skill loader, metadata enforcement, audit log, PII scrubber, background task scaffold  |
+| **Phase 3: MVP Workflow Skills**           | 5--7  | All 4 skills implemented, HITL and role-scoping verified                               |
+| **Phase 4: Pilot and Observation**         | 8     | Real usage, issues triaged, success criteria evaluated                                 |
 
 > **Revised Estimates:** The 8-week target is tight but feasible given the RBAC
 > simplification (see Section 3.2.3 -- the role-scoped permission model maps
@@ -190,11 +190,11 @@ admin operator.
 
 ### 4.3 Testing Strategy
 
-| Layer | Tool | Scope |
-|---|---|---|
-| **Unit tests** | Vitest (existing infra at `vitest.unit.config.ts`) | HITL queue logic, PII scrubber, metadata enforcement, skill loader |
-| **Integration tests** | Vitest | Role-based message routing, approval flow state machine, audit log writes |
-| **E2E tests** | Vitest (e2e config) | At least one complete workflow end-to-end (Voice-to-Job-Note recommended) |
+| Layer                 | Tool                                               | Scope                                                                     |
+| --------------------- | -------------------------------------------------- | ------------------------------------------------------------------------- |
+| **Unit tests**        | Vitest (existing infra at `vitest.unit.config.ts`) | HITL queue logic, PII scrubber, metadata enforcement, skill loader        |
+| **Integration tests** | Vitest                                             | Role-based message routing, approval flow state machine, audit log writes |
+| **E2E tests**         | Vitest (e2e config)                                | At least one complete workflow end-to-end (Voice-to-Job-Note recommended) |
 
 **Pre-commit check:**
 

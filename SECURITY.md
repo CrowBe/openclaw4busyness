@@ -17,13 +17,13 @@ If you believe you've found a security issue, please report it via [GitHub priva
 7. **Environment**
 8. **Remediation Advice**
 
-## Closed Skill Registry
+## Closed Skill Policy
 
-This fork enforces a closed skill registry. All skills are plain TypeScript modules committed to version control. The following are prohibited:
+This fork enforces a closed skill registry. Skills are only loaded from the local /skills directory committed to this repository. The following are prohibited:
 
-- **No dynamic skill installation at runtime.** Skills cannot be loaded from the network or installed via CLI commands.
-- **No community skill registry (ClawHub).** The ClawHub module and all dynamic skill-loading endpoints have been removed.
-- **No skill may be added without a pull request, code review, and explicit merge approval.**
+- **No dynamic skill installation at runtime.** The `skills.install` gateway method has been permanently disabled and removed. Skills cannot be fetched from the network or installed via remote commands.
+- **No community skill registry (ClawHub).** The ClawHub remote skill registry and all associated dynamic skill-loading endpoints have been removed from this fork.
+- **No skill may be added without a pull request, code review, and explicit merge approval.** All skills must be reviewed by a maintainer before they are deployed.
 
 Each skill declares metadata flags (`financial`, `client_facing`, `read_only`) that determine how the gateway handles its output. These flags cannot be overridden at runtime.
 
