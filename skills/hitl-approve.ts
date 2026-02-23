@@ -8,6 +8,19 @@ function getStore() {
   return getHitlStore(dbPath);
 }
 
+/**
+ * Return the operator role IDs configured in HITL_OPERATOR_ROLE_IDS (comma-separated).
+ * Returns an empty array when the variable is unset — no restriction applied.
+ */
+function resolveOperatorRoleIds(): string[] {
+  const raw = process.env.HITL_OPERATOR_ROLE_IDS;
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((s: string) => s.trim())
+    .filter(Boolean);
+}
+
 const hitlApproveSkill: Skill = {
   metadata: {
     name: "hitl-approve",
@@ -17,6 +30,19 @@ const hitlApproveSkill: Skill = {
     read_only: false,
   },
   async execute(args, ctx) {
+    // Gate to Office Operator and Admin roles when configured.
+    const operatorRoleIds = resolveOperatorRoleIds();
+    if (operatorRoleIds.length > 0) {
+      const senderRoles = ctx.senderRoles ?? [];
+      const allowed = senderRoles.some((r) => operatorRoleIds.includes(r));
+      if (!allowed) {
+        return {
+          ok: false,
+          message: "Only Office Operator or Admin roles may approve or reject HITL actions",
+        };
+      }
+    }
+
     const action_id = typeof args.action_id === "string" ? args.action_id.trim() : "";
     if (!action_id) {
       return { ok: false, message: "action_id is required" };

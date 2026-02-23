@@ -7,6 +7,7 @@ import {
 } from "../agents/model-selection.js";
 import { resolveAgentSessionDirs } from "../agents/session-dirs.js";
 import { cleanStaleLockFiles } from "../agents/session-write-lock.js";
+import { startAllTasks } from "../background/executor.js";
 import type { CliDeps } from "../cli/deps.js";
 import type { loadConfig } from "../config/config.js";
 import { resolveStateDir } from "../config/paths.js";
@@ -21,6 +22,7 @@ import { isTruthyEnvValue } from "../infra/env.js";
 import type { loadOpenClawPlugins } from "../plugins/loader.js";
 import { type PluginServicesHandle, startPluginServices } from "../plugins/services.js";
 import { registerTradeSkills } from "../skills/register-trade.js";
+import { isWhisperAvailable } from "../voice/transcribe.js";
 import { startBrowserControlServerIfEnabled } from "./server-browser.js";
 import {
   scheduleRestartSentinelWake,
@@ -126,6 +128,21 @@ export async function startGatewaySidecars(params: {
     registerTradeSkills();
   } catch (err) {
     params.log.warn(`trade skill registration failed: ${String(err)}`);
+  }
+
+  // Start registered background tasks (no-op when none are registered yet).
+  try {
+    startAllTasks();
+  } catch (err) {
+    params.log.warn(`background task startup failed: ${String(err)}`);
+  }
+
+  // Warn if the external whisper CLI is absent — voice-note skill will fail at runtime.
+  if (!isWhisperAvailable()) {
+    params.log.warn(
+      "whisper CLI not found: the voice-note skill will fail until whisper is installed. " +
+        "See docs/internal/INFRASTRUCTURE.md for install instructions.",
+    );
   }
 
   // Launch configured channels so gateway replies via the surface the message came from.
